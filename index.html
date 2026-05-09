@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ロト6ハイブリッド予想</title>
+
+<style>
+body {
+  font-family: sans-serif;
+  background: #f5f7fb;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+label {
+  font-weight: bold;
+  display: block;
+  margin-top: 15px;
+}
+
+input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.generate {
+  background: #4CAF50;
+  color: white;
+}
+
+.generate:hover {
+  background: #45a049;
+}
+
+.result-box {
+  margin-top: 25px;
+  text-align: center;
+}
+
+.numbers {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.ball {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>ロト6予想ツール</h1>
+
+  <label>前回当選番号</label>
+  <input id="last" placeholder="例: 3,12,18,25,30,41">
+
+  <label>切り数字（除外）</label>
+  <input id="cut" placeholder="例: 1,2,5">
+
+  <label>本命数字</label>
+  <input id="main" placeholder="例: 7,14,21">
+
+  <div class="buttons">
+    <button class="generate" onclick="generate()">予想生成</button>
+    <button onclick="generate()">再出力</button>
+  </div>
+
+  <div class="result-box">
+    <h2>予想結果</h2>
+    <div id="result" class="numbers"></div>
+  </div>
+</div>
+
+<script>
+function parseInput(id){
+  return [...new Set(
+    document.getElementById(id).value
+      .split(",")
+      .map(n => parseInt(n.trim(), 10))
+      .filter(n => Number.isInteger(n) && n >= 1 && n <= 43)
+  )];
+}
+
+function shuffle(arr){
+  return [...arr].sort(() => Math.random() - 0.5);
+}
+
+function addFrom(source, result, cut, count){
+  const pool = shuffle(source).filter(n => !cut.has(n) && !result.has(n));
+
+  for(let n of pool){
+    if(result.size >= count) break;
+    result.add(n);
+  }
+}
+
+function generate(){
+  const last = parseInput("last");
+  const cut = new Set(parseInput("cut"));
+  const main = parseInput("main");
+
+  const result = new Set();
+
+  const mainCount = Math.floor(Math.random() * 2) + 2;
+  addFrom(main, result, cut, mainCount);
+
+  const lastCount = Math.floor(Math.random() * 2) + 1;
+  addFrom(last, result, cut, result.size + lastCount);
+
+  const allNumbers = Array.from({ length: 43 }, (_, i) => i + 1);
+  addFrom(allNumbers, result, cut, 6);
+
+  const final = Array.from(result).sort((a, b) => a - b);
+
+  const resultDiv = document.getElementById("result");
+  resultDiv.innerHTML = "";
+
+  if(final.length !== 6){
+    resultDiv.innerHTML = "<p>候補数字が足りません</p>";
+    return;
+  }
+
+  final.forEach(num => {
+    const ball = document.createElement("div");
+    ball.className = "ball";
+    ball.innerText = num;
+    resultDiv.appendChild(ball);
+  });
+}
+</script>
+
+</body>
+</html>
